@@ -1,0 +1,5 @@
+# Local-only files; the deployed site is just the static app.
+.claude
+server.js
+package.json
+README.md
