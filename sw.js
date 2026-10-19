@@ -1,5 +1,5 @@
 // Bump VERSION whenever you change a file below so installed copies pick up the update.
-const VERSION = 'gcalc-v3';
+const VERSION = 'gcalc-v4';
 const ASSETS = [
   './',
   './index.html',
