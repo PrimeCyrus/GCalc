@@ -1,0 +1,10 @@
+{
+  "name": "gcalc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Grocery calculator: price to weight and weight to price for fruits and vegetables.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

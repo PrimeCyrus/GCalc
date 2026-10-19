@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="description" content="Pick a vegetable or fruit, enter its rate, then turn a price into a weight or a weight into a price.">
+  <meta name="theme-color" content="#f6f7f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1411" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="GCalc">
+  <title>GCalc</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="bar">
+        <div class="brand">
+          <img src="icons/icon.svg" alt="" width="36" height="36">
+          <div>
+            <h1>GCalc</h1>
+            <p class="sub">Grocery calculator</p>
+          </div>
+        </div>
+        <button class="icon-btn" id="addBtn" type="button" aria-label="Add item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="icon-btn" id="billBtn" type="button" aria-label="Open bill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+          <span class="badge" id="billCount" hidden>0</span>
+        </button>
+        <button class="icon-btn" id="settingsBtn" type="button" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="3"/><circle cx="10" cy="17" r="3"/></svg>
+        </button>
+      </div>
+
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Search vegetables & fruits" autocomplete="off" enterkeyhint="search" aria-label="Search items">
+      </label>
+
+      <div class="tabs" id="tabs" role="group" aria-label="Category">
+        <button type="button" data-cat="all" aria-pressed="true">All</button>
+        <button type="button" data-cat="veg" aria-pressed="false">Vegetables</button>
+        <button type="button" data-cat="fruit" aria-pressed="false">Fruits</button>
+        <button type="button" class="edit-btn" id="editBtn" aria-pressed="false">Edit</button>
+      </div>
+    </header>
+
+    <main>
+      <p class="edit-hint" id="editHint" hidden>Tap an item to delete it. Tap Done when you’re finished.</p>
+      <p class="no-match" id="noMatch" hidden></p>
+      <ul class="grid" id="grid"></ul>
+    </main>
+  </div>
+
+  <!-- Calculator -->
+  <dialog class="sheet" id="calc" aria-labelledby="calcName">
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-body">
+      <div class="sheet-head">
+        <span class="avatar lg" id="calcAvatar" aria-hidden="true"></span>
+        <div class="grow">
+          <h2 id="calcName"></h2>
+          <p class="muted" id="calcCat"></p>
+        </div>
+        <button class="icon-btn ghost" type="button" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+
+      <div>
+        <label class="field-label" for="rate">Rate</label>
+        <div class="rate-row">
+          <div class="input-wrap">
+            <span class="affix cur" aria-hidden="true"></span>
+            <input id="rate" inputmode="decimal" autocomplete="off" placeholder="0" enterkeyhint="next">
+          </div>
+          <select id="per" aria-label="Rate is per">
+            <option value="1000">per kg</option>
+            <option value="500">per 500 g</option>
+            <option value="250">per 250 g</option>
+            <option value="100">per 100 g</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="seg" id="mode" role="group" aria-label="Calculate">
+        <button type="button" data-mode="weight">Price → Weight</button>
+        <button type="button" data-mode="price">Weight → Price</button>
+      </div>
+
+      <div class="result" aria-live="polite">
+        <span class="res-label" id="resLabel">You get</span>
+        <output id="resMain">—</output>
+        <span class="res-sub" id="resSub"></span>
+      </div>
+
+      <div id="amountField">
+        <label class="field-label" for="amount">Amount to spend</label>
+        <div class="input-wrap big">
+          <span class="affix cur" aria-hidden="true"></span>
+          <input id="amount" inputmode="decimal" autocomplete="off" placeholder="0" enterkeyhint="done">
+        </div>
+        <div class="chips" id="amountChips"></div>
+      </div>
+
+      <div id="weightField" hidden>
+        <label class="field-label" for="weight">Weight needed</label>
+        <div class="input-wrap big">
+          <input id="weight" inputmode="decimal" autocomplete="off" placeholder="0" enterkeyhint="done">
+          <div class="unit" id="unit" role="group" aria-label="Weight unit">
+            <button type="button" data-unit="g">g</button>
+            <button type="button" data-unit="kg">kg</button>
+          </div>
+        </div>
+        <div class="chips" id="weightChips"></div>
+      </div>
+
+      <button class="primary" type="button" id="addToBill" disabled>Add to bill</button>
+      <button class="text-btn danger" type="button" id="deleteItem">Delete this item</button>
+    </div>
+  </dialog>
+
+  <!-- Bill -->
+  <dialog class="sheet" id="bill" aria-labelledby="billTitle">
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-body">
+      <div class="sheet-head">
+        <h2 class="grow" id="billTitle">Bill</h2>
+        <button class="icon-btn ghost" type="button" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <p class="muted empty-note" id="billEmpty">Nothing here yet. Work out an item and tap “Add to bill”.</p>
+      <ul class="bill-list" id="billList"></ul>
+      <div class="bill-foot" id="billFoot">
+        <div class="total"><span>Total</span><strong id="billTotal"></strong></div>
+        <button class="text-btn danger" type="button" id="clearBill">Clear bill</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Add item -->
+  <dialog class="sheet" id="add" aria-labelledby="addTitle">
+    <div class="grabber" aria-hidden="true"></div>
+    <form class="sheet-body" id="addForm" novalidate>
+      <div class="sheet-head">
+        <h2 class="grow" id="addTitle">Add item</h2>
+        <button class="icon-btn ghost" type="button" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div>
+        <label class="field-label" for="addName">Name</label>
+        <div class="input-wrap"><input id="addName" maxlength="40" placeholder="e.g. Drumstick" autocomplete="off" enterkeyhint="done"></div>
+      </div>
+      <div>
+        <label class="field-label" for="addEmoji">Emoji <span class="optional">(optional)</span></label>
+        <div class="input-wrap"><input id="addEmoji" maxlength="16" placeholder="🥕" autocomplete="off"></div>
+      </div>
+      <div>
+        <span class="field-label" id="addCatLabel">Category</span>
+        <div class="seg" id="addCat" role="group" aria-labelledby="addCatLabel">
+          <button type="button" data-cat="veg">Vegetable</button>
+          <button type="button" data-cat="fruit">Fruit</button>
+        </div>
+      </div>
+      <button class="primary" type="submit">Add and set rate</button>
+    </form>
+  </dialog>
+
+  <!-- Settings -->
+  <dialog class="sheet" id="settings" aria-labelledby="settingsTitle">
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-body">
+      <div class="sheet-head">
+        <h2 class="grow" id="settingsTitle">Settings</h2>
+        <button class="icon-btn ghost" type="button" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div>
+        <label class="field-label" for="currency">Currency</label>
+        <select id="currency" class="full"></select>
+      </div>
+      <button class="primary" type="button" id="installBtn" hidden>Install app</button>
+      <p class="muted small" id="installHint">To install, open your browser menu and choose “Add to Home screen”. Once installed it works offline.</p>
+      <button class="text-btn" type="button" id="restoreItems" hidden></button>
+      <button class="text-btn danger" type="button" id="resetRates">Clear all saved rates</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span id="toastMsg"></span>
+    <button type="button" id="toastAction" hidden></button>
+  </div>
+</body>
+</html>
